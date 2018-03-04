@@ -7,9 +7,14 @@ import {
     View,
     ListView,
     Platform,
-    TouchableOpacity
+    TouchableOpacity,
+    NativeEventEmitter
 } from 'react-native';
 import { ReactNativeAudioStreaming, Player } from 'react-native-audio-streaming';
+
+const reactNativeAudioStreamingEmitter = new NativeEventEmitter(
+  ReactNativeAudioStreaming
+)
 
 export default class App extends Component {
     constructor() {
@@ -38,6 +43,10 @@ export default class App extends Component {
             dataSource: this.ds.cloneWithRows(this.urls),
             selectedSource: this.urls[0].url
         };
+        reactNativeAudioStreamingEmitter.addListener(
+          'AudioBridgeEvent',
+          event => console.log(event)
+        );
     }
 
     render() {

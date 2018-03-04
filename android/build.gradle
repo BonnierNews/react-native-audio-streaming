@@ -15,13 +15,13 @@ android {
         }
     }
     lintOptions {
-       warning 'InvalidPackage'
+        warning 'InvalidPackage'
     }
 }
 
 dependencies {
-  compile "com.facebook.react:react-native:+"
-  compile('com.google.android.exoplayer:exoplayer:r2.4.2') {
-      exclude group: 'com.android.support'
-  }
+    compile "com.facebook.react:react-native:+"
+    compile('com.google.android.exoplayer:exoplayer:r2.4.4') {
+        exclude group: 'com.android.support'
+    }
 }
