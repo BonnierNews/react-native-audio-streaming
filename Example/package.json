@@ -6,8 +6,8 @@
     "start": "node node_modules/react-native/local-cli/cli.js start"
   },
   "dependencies": {
-    "react": "^15.4.1",
-    "react-native": "^0.39.2",
+    "react": "16.2.0",
+    "react-native": "0.53.3",
     "react-native-audio-streaming": "file:../"
   }
 }

@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
 import {
     NativeModules,
     StyleSheet,
@@ -10,7 +9,7 @@ import {
     ActivityIndicator,
     Platform
 } from 'react-native';
-
+import PropTypes from 'prop-types';
 const { ReactNativeAudioStreaming } = NativeModules;
 
 // Possibles states

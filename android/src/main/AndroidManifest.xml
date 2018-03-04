@@ -7,8 +7,7 @@
         <service
             android:name="com.audioStreaming.Signal"
             android:enabled="true"
-            android:theme="@android:style/Theme.NoTitleBar"
-            android:stopWithTask="true"/>
+            android:theme="@android:style/Theme.NoTitleBar"/>
     </application>
 </manifest>
   
