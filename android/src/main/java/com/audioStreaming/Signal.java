@@ -83,6 +83,9 @@ public class Signal extends Service implements ExoPlayer.EventListener, Metadata
     private TelephonyManager phoneManager;
     private PhoneListener phoneStateListener;
 
+    private Handler handler;
+    private Runnable runnable;
+
     @Override
     public void onCreate() {
         IntentFilter intentFilter = new IntentFilter();
@@ -400,4 +403,34 @@ public class Signal extends Service implements ExoPlayer.EventListener, Metadata
     public void onLoadError(IOException error) {
         Log.e(TAG, error.getMessage());
     }
+
+    private void updateProgressBar() {
+        long duration = player == null ? 0 : player.getDuration();
+        long position = player == null ? 0 : player.getCurrentPosition();
+        long bufferedPosition = player == null ? 0 : player.getBufferedPosition();
+        // Remove scheduled updates.
+        handler.removeCallbacks(updateProgressAction);
+        // Schedule an update if necessary.
+        int playbackState = player == null ? ExoPlayer.STATE_IDLE : player.getPlaybackState();
+        if ((playbackState != ExoPlayer.STATE_IDLE) && (playbackState != ExoPlayer.STATE_ENDED)) {
+            long delayMs;
+            if (player.getPlayWhenReady() && playbackState == ExoPlayer.STATE_READY) {
+                delayMs = 1000 - (position % 1000);
+                if (delayMs < 200) {
+                    delayMs += 1000;
+                }
+            } else {
+                delayMs = 1000;
+            }
+            Log.d(TAG, "updateProgressBar: " + position + ":" + duration);
+            handler.postDelayed(updateProgressAction, delayMs);
+        }
+    }
+
+    private final Runnable updateProgressAction = new Runnable() {
+        @Override
+        public void run() {
+            updateProgressBar();
+        }
+    };
 }
