@@ -16,6 +16,8 @@ const reactNativeAudioStreamingEmitter = new NativeEventEmitter(
   ReactNativeAudioStreaming
 )
 
+
+
 export default class App extends Component {
     constructor() {
         super();
@@ -47,6 +49,9 @@ export default class App extends Component {
           'AudioBridgeEvent',
           event => console.log(event)
         );
+        ReactNativeAudioStreaming.getStatus((error, status) => {
+          console.log(status, error)
+        });
     }
 
     render() {
