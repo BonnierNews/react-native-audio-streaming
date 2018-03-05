@@ -1,116 +1,133 @@
+/**
+ * Sample React Native App
+ * https://github.com/facebook/react-native
+ * @flow
+ */
 
 import React, { Component } from 'react';
 import {
-    AppRegistry,
-    StyleSheet,
-    Text,
-    View,
-    ListView,
-    Platform,
-    TouchableOpacity,
-    NativeEventEmitter
-} from 'react-native';
-import { ReactNativeAudioStreaming, Player } from 'react-native-audio-streaming';
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  NativeEventEmitter,
+  TouchableOpacity,
+  Button
+} from 'react-native'
+
+import { ReactNativeAudioStreaming } from 'react-native-audio-streaming'
 
 const reactNativeAudioStreamingEmitter = new NativeEventEmitter(
   ReactNativeAudioStreaming
 )
 
+const data = [
+  {
+    title: 'Studio DN special: Ulf Kristersson',
+    stream: 'https://ads-e-bauerse-pods.sharp-stream.com/489/studio_dn_special_kristersson_re_dbb442cd.mp3?awCollectionId=489&awEpisodeId=36265'
+  },
+  {
+    title: 'Studio DN special: Ebba Busch Thor',
+    stream: 'https://ads-e-bauerse-pods.sharp-stream.com/489/studio_dn_special_busch_thor_rek_a61e0d33.mp3?awCollectionId=489&awEpisodeId=36250'
+  },
+  {
+    title: 'Lasermannen dömd i Tyskland',
+    stream: 'https://ads-e-bauerse-pods.sharp-stream.com/489/studiodn23feb_mixdown_0b43002f.mp3?awCollectionId=489&awEpisodeId=36238'
+  },
+  {
+    title: 'Studio DN special: Jan Björklund',
+    stream: 'https://ads-e-bauerse-pods.sharp-stream.com/489/studio_dn_special_bjorklund_rekl_8e62ce3f.mp3?awCollectionId=489&awEpisodeId=36231'
+  },
+  {
+    title: 'Studio DN special: Annie Lööf',
+    stream: 'https://ads-e-bauerse-pods.sharp-stream.com/489/studio_dn_special_annie_loof_rek_0da813c1.mp3?awCollectionId=489&awEpisodeId=36223'
+  }
+]
 
+type Props = {};
+export default class App extends Component<Props> {
+  componentDidMount () {
+    reactNativeAudioStreamingEmitter.addListener(
+      'AudioBridgeEvent',
+      event => console.log(event)
+    )
+  }
 
-export default class App extends Component {
-    constructor() {
-        super();
-        this.ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-        this.urls = [
-            {
-                name: 'Shoutcast stream',
-                url: 'http://lacavewebradio.chickenkiller.com:8000/stream.mp3'
-            },
-            {
-                name: 'M4A stream',
-                url: 'http://web.ist.utl.pt/antonio.afonso/www.aadsm.net/libraries/id3/music/02_Viandanze.m4a'
-            },
-            {
-                name: 'MP3 stream with ID3 meta data',
-                url: 'http://web.ist.utl.pt/antonio.afonso/www.aadsm.net/libraries/id3/music/Bruno_Walter_-_01_-_Beethoven_Symphony_No_1_Menuetto.mp3'
-            },
-            {
-                name: 'MP3 stream',
-                url: 'http://www.stephaniequinn.com/Music/Canon.mp3'
-            }
-        ];
+  componentWillUnmount() {
+    this.onStop()
+  }
 
-        this.state = {
-            dataSource: this.ds.cloneWithRows(this.urls),
-            selectedSource: this.urls[0].url
-        };
-        reactNativeAudioStreamingEmitter.addListener(
-          'AudioBridgeEvent',
-          event => console.log(event)
-        );
-        ReactNativeAudioStreaming.getStatus((error, status) => {
-          console.log(status, error)
-        });
-    }
+  renderItem = ({item}) => (
+    <Button
+      onPress={() => this.onPlayStream(item.stream)}
+      title={item.title}
+    />
+  )
 
-    render() {
-        return (
-            <View style={styles.container}>
-                <ListView
-                    dataSource={this.state.dataSource}
-                    renderRow={(rowData) =>
-                        <TouchableOpacity onPress={() => {
-                            this.setState({selectedSource: rowData.url, dataSource: this.ds.cloneWithRows(this.urls)});
-                            ReactNativeAudioStreaming.play(rowData.url, {});
-                        }}>
-                            <View style={StyleSheet.flatten([
-                                styles.row,
-                                {backgroundColor: rowData.url == this.state.selectedSource ? '#3fb5ff' : 'white'}
-                            ])}>
-                                <Text style={styles.icon}>▸</Text>
-                                <View style={styles.column}>
-                                    <Text style={styles.name}>{rowData.name}</Text>
-                                    <Text style={styles.url}>{rowData.url}</Text>
-                                </View>
-                            </View>
-                        </TouchableOpacity>
-                    }
-                />
+  onPlayStream = (url) => ReactNativeAudioStreaming.play(url, {})
 
-                <Player url={this.state.selectedSource} />
-            </View>
-        );
-    }
+  onPause = () => ReactNativeAudioStreaming.pause()
+
+  onResume = () => ReactNativeAudioStreaming.resume()
+
+  onStop = () => ReactNativeAudioStreaming.stop()
+
+  onPress = () => false
+
+  render() {
+    return (
+      <View style={styles.container}>
+        <FlatList
+          data={data}
+          renderItem={this.renderItem}
+        />
+        <View style={styles.player}>
+          <Button
+            onPress={this.onResume}
+            title="Resume"
+          />
+          <Button
+            onPress={this.onPause}
+            title="Pause"
+          />
+          <Button
+            onPress={this.onStop}
+            title="Stop"
+          />
+          <Button
+            onPress={this.onPress}
+            title="Skip +15"
+          />
+          <Button
+            onPress={this.onPress}
+            title="Skip -15"
+          />
+        </View>
+      </View>
+    );
+  }
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#F5FCFF',
-        paddingTop: Platform.OS === 'ios' ? 30 : 0
-    },
-    row: {
-        flex: 1,
-        flexDirection: 'row',
-        padding: 5,
-        borderBottomColor: 'grey',
-        borderBottomWidth: 1
-    },
-    column: {
-        flexDirection: 'column'
-    },
-    icon: {
-        fontSize: 26,
-        width: 30,
-        textAlign: 'center'
-    },
-    name: {
-        color: '#000'
-    },
-    url: {
-        color: '#CCC'
-    }
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5FCFF',
+    marginVertical: 20
+  },
+  flatlist: {
+    flex: 3
+  },
+  player: {
+    flex: 1
+  },
+  item: {
+    padding: 10,
+    borderBottomWidth: 0.5
+  },
+  itemTitle: {
+    fontSize: 20
+  }
 });

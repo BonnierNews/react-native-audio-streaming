@@ -1,6 +1,3 @@
-#import <React/RCTBridgeModule.h>
-#import <React/RCTEventDispatcher.h>
-
 #import "ReactNativeAudioStreaming.h"
 
 #define LPN_AUDIO_BUFFER_SEC 20 // Can't use this with shoutcast buffer meta data
@@ -65,7 +62,6 @@ RCT_EXPORT_MODULE()
 - (void)dealloc
 {
    [self unregisterAudioInterruptionNotifications];
-   [self unregisterRemoteControlEvents];
    [self.audioPlayer setDelegate:nil];
 }
 
@@ -87,22 +83,6 @@ RCT_EXPORT_METHOD(play:(NSString *) streamUrl options:(NSDictionary *)options)
    }
 
    self.lastUrlString = streamUrl;
-   self.showNowPlayingInfo = false;
-
-   if ([options objectForKey:@"showIniOSMediaCenter"]) {
-      self.showNowPlayingInfo = [[options objectForKey:@"showIniOSMediaCenter"] boolValue];
-   }
-
-   if (self.showNowPlayingInfo) {
-      //unregister any existing registrations
-      [self unregisterAudioInterruptionNotifications];
-      [self unregisterRemoteControlEvents];
-      //register
-      [self registerAudioInterruptionNotifications];
-      [self registerRemoteControlEvents];
-   }
-
-   [self setNowPlayingInfo:true];
 }
 
 RCT_EXPORT_METHOD(seekToTime:(double) seconds)
@@ -124,7 +104,6 @@ RCT_EXPORT_METHOD(goForward:(double) seconds)
 
    if (self.audioPlayer.duration < newtime) {
       [self.audioPlayer stop];
-      [self setNowPlayingInfo:false];
    } else {
       [self.audioPlayer seekToTime:newtime];
    }
@@ -151,7 +130,6 @@ RCT_EXPORT_METHOD(pause)
       return;
    } else {
       [self.audioPlayer pause];
-      [self setNowPlayingInfo:false];
       [self deactivate];
    }
 }
@@ -163,7 +141,6 @@ RCT_EXPORT_METHOD(resume)
    } else {
       [self activate];
       [self.audioPlayer resume];
-      [self setNowPlayingInfo:true];
    }
 }
 
@@ -173,7 +150,6 @@ RCT_EXPORT_METHOD(stop)
       return;
    } else {
       [self.audioPlayer stop];
-      [self setNowPlayingInfo:false];
       [self deactivate];
    }
 }
@@ -216,7 +192,7 @@ RCT_EXPORT_METHOD(getStatus: (RCTResponseSenderBlock) callback)
 }
 
 - (void)audioPlayer:(STKAudioPlayer *)player unexpectedError:(STKAudioPlayerErrorCode)errorCode {
-   NSLog(@"AudioPlayer unexpected Error with code %d", errorCode);
+   NSLog(@"AudioPlayer unexpected Error with code %ld", (long)errorCode);
 }
 
 - (void)audioPlayer:(STKAudioPlayer *)audioPlayer didReadStreamMetadata:(NSDictionary *)dictionary {
@@ -228,7 +204,6 @@ RCT_EXPORT_METHOD(getStatus: (RCTResponseSenderBlock) callback)
                                                 @"key": @"StreamTitle",
                                                 @"value": self.currentSong
                                                 }];
-   [self setNowPlayingInfo:true];
 }
 
 - (void)audioPlayer:(STKAudioPlayer *)player stateChanged:(STKAudioPlayerState)state previousState:(STKAudioPlayerState)previousState
@@ -396,56 +371,4 @@ RCT_EXPORT_METHOD(getStatus: (RCTResponseSenderBlock) callback)
          break;
    }
 }
-
-#pragma mark - Remote Control Events
-
-- (void)registerRemoteControlEvents
-{
-   MPRemoteCommandCenter *commandCenter = [MPRemoteCommandCenter sharedCommandCenter];
-   [commandCenter.playCommand addTarget:self action:@selector(didReceivePlayCommand:)];
-   [commandCenter.pauseCommand addTarget:self action:@selector(didReceivePauseCommand:)];
-   commandCenter.playCommand.enabled = YES;
-   commandCenter.pauseCommand.enabled = YES;
-   commandCenter.stopCommand.enabled = NO;
-   commandCenter.nextTrackCommand.enabled = NO;
-   commandCenter.previousTrackCommand.enabled = NO;
-}
-
-- (MPRemoteCommandHandlerStatus)didReceivePlayCommand:(MPRemoteCommand *)event
-{
-   NSLog(@"didReceivePlayCommand");
-   [self resume];
-   return MPRemoteCommandHandlerStatusSuccess;
-}
-
-- (MPRemoteCommandHandlerStatus)didReceivePauseCommand:(MPRemoteCommand *)event
-{
-   NSLog(@"didReceivePauseCommand");
-   [self pause];
-   return MPRemoteCommandHandlerStatusSuccess;
-}
-
-- (void)unregisterRemoteControlEvents
-{
-   MPRemoteCommandCenter *commandCenter = [MPRemoteCommandCenter sharedCommandCenter];
-   [commandCenter.playCommand removeTarget:self];
-   [commandCenter.pauseCommand removeTarget:self];
-}
-
-- (void)setNowPlayingInfo:(bool)isPlaying
-{
-   if (self.showNowPlayingInfo) {
-      // TODO Get artwork from stream
-      // MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc]initWithImage:[UIImage imageNamed:@"webradio1"]];
-
-      NSString* appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleName"];
-      NSDictionary *nowPlayingInfo = [NSDictionary dictionaryWithObjectsAndKeys:
-                                      self.currentSong ? self.currentSong : @"", MPMediaItemPropertyAlbumTitle,
-                                      @"", MPMediaItemPropertyAlbumArtist,
-                                      appName ? appName : @"AppName", MPMediaItemPropertyTitle,
-                                      [NSNumber numberWithFloat:isPlaying ? 1.0f : 0.0], MPNowPlayingInfoPropertyPlaybackRate, nil];
-      [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = nowPlayingInfo;
-   }
-}
-
 @end
