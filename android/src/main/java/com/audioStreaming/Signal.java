@@ -82,14 +82,14 @@ public class Signal extends Service implements ExoPlayer.EventListener, Metadata
     public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
 
     }
-    
+
     public void setData(Context context, ReactNativeAudioStreamingModule module) {
         this.context = context;
         this.clsActivity = module.getClassActivity();
         this.module = module;
-        
+
         this.eventsReceiver = new EventsReceiver(this.module);
-        
+
         registerReceiver(this.eventsReceiver, new IntentFilter(Mode.CREATED));
         registerReceiver(this.eventsReceiver, new IntentFilter(Mode.IDLE));
         registerReceiver(this.eventsReceiver, new IntentFilter(Mode.DESTROYED));
@@ -109,7 +109,7 @@ public class Signal extends Service implements ExoPlayer.EventListener, Metadata
 
         this.phoneStateListener = new PhoneListener(this.module);
         this.phoneManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-        if (this.phoneManager != null) {
+        if ( this.phoneManager != null ) {
             this.phoneManager.listen(this.phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
         }
     }
@@ -121,7 +121,7 @@ public class Signal extends Service implements ExoPlayer.EventListener, Metadata
 
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-        Log.d("onPlayerStateChanged", ""+playbackState);
+        Log.d("onPlayerStateChanged", "" + playbackState);
 
         addProgressListener();
 
@@ -134,7 +134,7 @@ public class Signal extends Service implements ExoPlayer.EventListener, Metadata
                 sendBroadcast(new Intent(Mode.BUFFERING_START));
                 break;
             case ExoPlayer.STATE_READY:
-                if (this.player != null && this.player.getPlayWhenReady()) {
+                if ( this.player != null && this.player.getPlayWhenReady() ) {
                     sendBroadcast(new Intent(Mode.PLAYING));
                 } else {
                     sendBroadcast(new Intent(Mode.READY));
@@ -148,9 +148,10 @@ public class Signal extends Service implements ExoPlayer.EventListener, Metadata
     }
 
     @Override
-    public void onTimelineChanged(Timeline timeline, Object manifest) {}
-    
-    
+    public void onTimelineChanged(Timeline timeline, Object manifest) {
+    }
+
+
     @Override
     public void onPlayerError(ExoPlaybackException error) {
         Log.d(TAG, error.getMessage());
@@ -172,15 +173,15 @@ public class Signal extends Service implements ExoPlayer.EventListener, Metadata
         result.append(version.length() > 0 ? version : "1.0");
 
         // add the model for the release build
-        if ("REL".equals(Build.VERSION.CODENAME)) {
+        if ( "REL".equals(Build.VERSION.CODENAME) ) {
             String model = Build.MODEL;
-            if (model.length() > 0) {
+            if ( model.length() > 0 ) {
                 result.append("; ");
                 result.append(model);
             }
         }
         String id = Build.ID; // "MASTER" or "M4-rc20"
-        if (id.length() > 0) {
+        if ( id.length() > 0 ) {
             result.append(" Build/");
             result.append(id);
         }
@@ -192,7 +193,7 @@ public class Signal extends Service implements ExoPlayer.EventListener, Metadata
         runnable = new Runnable() {
             @Override
             public void run() {
-                if (player != null && player.getPlayWhenReady()) {
+                if ( (player != null) && (player.getPlaybackState() == ExoPlayer.STATE_READY) && player.getPlayWhenReady() ) {
                     double position = (getCurrentPosition() / 1000);
                     double duration = (getDuration() / 1000);
                     Intent StreamingIntent = new Intent(Mode.STREAMING);
@@ -200,8 +201,6 @@ public class Signal extends Service implements ExoPlayer.EventListener, Metadata
                     StreamingIntent.putExtra("duration", duration);
                     sendBroadcast(StreamingIntent);
                     handler.postDelayed(runnable, 1000);
-
-                    Log.d(TAG, "run: " + player.getPlayWhenReady());
                 }
             }
         };
@@ -213,76 +212,114 @@ public class Signal extends Service implements ExoPlayer.EventListener, Metadata
         handler.removeCallbacks(runnable);
         runnable = null;
     }
-    
+
     /**
-     *  Player controls
+     * Player controls
      */
-    
+
     public void play(String url) {
-        if (player != null ) {
+        if ( player != null ) {
             player.setPlayWhenReady(false);
             player.stop();
             player.seekTo(0);
         }
-        
+
         boolean playWhenReady = true; // TODO Allow user to customize this
         this.streamingURL = url;
-        
+
         // Create player
         Handler mainHandler = new Handler();
         TrackSelector trackSelector = new DefaultTrackSelector();
         this.player = ExoPlayerFactory.newSimpleInstance(this.getApplicationContext(), trackSelector);
-        
+
         // Create source
         ExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
         DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this.getApplication(), getDefaultUserAgent(), bandwidthMeter);
         MediaSource audioSource = new ExtractorMediaSource(Uri.parse(this.streamingURL), dataSourceFactory, extractorsFactory, mainHandler, this);
-        
+
         // Start preparing audio
         player.prepare(audioSource);
         player.addListener(this);
         player.setPlayWhenReady(playWhenReady);
     }
-    
+
     public void start() {
-        player.setPlayWhenReady(true);
+        if ( player != null ) {
+            player.setPlayWhenReady(true);
+        }
     }
-    
+
     public void pause() {
-        player.setPlayWhenReady(false);
-        sendBroadcast(new Intent(Mode.STOPPED));
+        if ( player != null ) {
+            player.setPlayWhenReady(false);
+            sendBroadcast(new Intent(Mode.STOPPED));
+        }
     }
-    
+
     public void resume() {
-        player.setPlayWhenReady(true);
+        if ( player != null ) {
+            player.setPlayWhenReady(true);
+        }
     }
-    
+
     public void stop() {
-        player.setPlayWhenReady(false);
-        sendBroadcast(new Intent(Mode.STOPPED));
+        if ( player != null ) {
+            player.setPlayWhenReady(false);
+            sendBroadcast(new Intent(Mode.STOPPED));
+        }
     }
-    
+
     public boolean isPlaying() {
         return player != null && player.getPlayWhenReady() && player.getPlaybackState() != ExoPlayer.STATE_ENDED;
     }
-    
+
     public long getDuration() {
         return player != null ? player.getDuration() : new Long(0);
     }
-    
+
     public long getCurrentPosition() {
         return player != null ? player.getCurrentPosition() : new Long(0);
     }
-    
+
     public int getBufferPercentage() {
         return player.getBufferedPercentage();
     }
-    
+
     public void seekTo(long timeMillis) {
-        player.seekTo(timeMillis);
+        if ( player != null ) {
+            player.seekTo(timeMillis);
+        }
     }
-    
+
+    public void goForward(double seconds) {
+        if ( player != null ) {
+            long progress = getCurrentPosition();
+            long duration = getDuration();
+            long newTime = (long) (progress + (seconds * 1000));
+
+            if ( duration < newTime ) {
+                stop();
+            } else {
+                seekTo(newTime);
+            }
+        }
+    }
+
+    public void goBack(double seconds) {
+        if ( player != null ) {
+            long progress = getCurrentPosition();
+            long duration = getDuration();
+            long newTime = (long) (progress - (seconds * 1000));
+
+            if ( newTime < 0 ) {
+                seekTo(0);
+            } else {
+                seekTo(newTime);
+            }
+        }
+    }
+
     public boolean isConnected() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
@@ -290,33 +327,35 @@ public class Signal extends Service implements ExoPlayer.EventListener, Metadata
     }
 
     public void setPlaybackRate(float speed) {
-        PlaybackParameters pp = new PlaybackParameters(speed, 1);
-        player.setPlaybackParameters(pp);
+        if ( player != null ) {
+            PlaybackParameters pp = new PlaybackParameters(speed, 1);
+            player.setPlaybackParameters(pp);
+        }
     }
-    
+
     /**
-     *  Meta data information
+     * Meta data information
      */
-    
+
     @Override
     public void onMetadata(Metadata metadata) {
 
     }
-    
+
     /**
-     *  Notification control
+     * Notification control
      */
-    
+
     @Override
     public IBinder onBind(Intent intent) {
         return binder;
     }
-    
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         return Service.START_NOT_STICKY;
     }
-    
+
     // Notification
     private PendingIntent makePendingIntent(String broadcast) {
         Intent intent = new Intent(broadcast);

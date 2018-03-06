@@ -47,6 +47,7 @@ const data = [
 
 export default class App extends Component {
   state = {
+    status: null,
     progress: 0.0,
     duration: 0.0
   }
@@ -55,13 +56,12 @@ export default class App extends Component {
     this.subscription = reactNativeAudioStreamingEmitter.addListener(
       'AudioBridgeEvent',
       event => {
-        console.log('AudioBridgeEvent', event)
+        let state = {status: event.status}
         if (event.status === 'STREAMING') {
-          this.setState({
-            progress: event.progress,
-            duration: event.duration
-          })
+          state.progress = event.progress
+          state.duration = event.duration
         }
+        this.setState(state)
       }
     )
   }
@@ -72,10 +72,12 @@ export default class App extends Component {
   }
 
   renderItem = ({item}) => (
-    <Button
-      onPress={() => this.onPlayStream(item.stream)}
-      title={item.title}
-    />
+    <View style={styles.item}>
+      <Button
+        onPress={() => this.onPlayStream(item.stream)}
+        title={item.title}
+      />
+    </View>
   )
 
   onPlayStream = (url) => ReactNativeAudioStreaming.play(url)
@@ -86,6 +88,10 @@ export default class App extends Component {
 
   onStop = () => ReactNativeAudioStreaming.stop()
 
+  onForward = () => ReactNativeAudioStreaming.goForward(15)
+
+  onBack = () => ReactNativeAudioStreaming.goBack(15)
+
   onPress = () => false
 
   render() {
@@ -95,29 +101,42 @@ export default class App extends Component {
           data={data}
           renderItem={this.renderItem}
         />
-        <View style={styles.player}>
+        <View style={styles.state}>
+          <Text>Status: {this.state.status}</Text>
           <Text>Progress: {this.state.progress}</Text>
           <Text>Duration: {this.state.duration}</Text>
-          <Button
-            onPress={this.onResume}
-            title="Resume"
-          />
-          <Button
-            onPress={this.onPause}
-            title="Pause"
-          />
-          <Button
-            onPress={this.onStop}
-            title="Stop"
-          />
-          <Button
-            onPress={this.onPress}
-            title="Skip +15"
-          />
-          <Button
-            onPress={this.onPress}
-            title="Skip -15"
-          />
+        </View>
+        <View style={styles.player}>
+          <View style={styles.item}>
+            <Button
+              onPress={this.onResume}
+              title="Resume"
+            />
+          </View>
+          <View style={styles.item}>
+            <Button
+              onPress={this.onPause}
+              title="Pause"
+            />
+          </View>
+          <View style={styles.item}>
+            <Button
+              onPress={this.onStop}
+              title="Stop"
+            />
+          </View>
+          <View style={styles.item}>
+            <Button
+              onPress={this.onForward}
+              title="Forward +15s"
+            />
+          </View>
+          <View style={styles.item}>
+            <Button
+              onPress={this.onBack}
+              title="Back -15s"
+            />
+          </View>
         </View>
       </View>
     );
@@ -136,13 +155,17 @@ const styles = StyleSheet.create({
     flex: 3
   },
   player: {
-    flex: 1
+    flex: 2,
+    width: '100%'
+  },
+  state: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 10
   },
   item: {
-    padding: 10,
-    borderBottomWidth: 0.5
-  },
-  itemTitle: {
-    fontSize: 20
+    width: '100%',
+    margin: 5
   }
 });

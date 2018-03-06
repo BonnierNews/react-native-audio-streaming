@@ -103,7 +103,11 @@ public class ReactNativeAudioStreamingModule extends ReactContextBaseJavaModule
   @ReactMethod public void seekToTime(int seconds) {
     signal.seekTo(seconds * 1000);
   }
-    
+
+  @ReactMethod public void goForward(double seconds) { signal.goForward(seconds); }
+
+  @ReactMethod public void goBack(double seconds) { signal.goBack(seconds); }
+
   @ReactMethod public void getStatus(Callback callback) {
     WritableMap state = Arguments.createMap();
     state.putDouble("duration", signal.getDuration());
