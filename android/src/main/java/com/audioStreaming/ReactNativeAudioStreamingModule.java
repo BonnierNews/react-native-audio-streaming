@@ -86,36 +86,20 @@ public class ReactNativeAudioStreamingModule extends ReactContextBaseJavaModule
     signal = null;
   }
     
-  @ReactMethod public void play(String streamingURL, ReadableMap options) {
+  @ReactMethod public void play(String streamingURL) {
     playInternal(streamingURL);
   }
     
-  private void playInternal(String streamingURL) {
-    signal.play(streamingURL);
-        
-    if (shouldShowNotification) {
-      signal.showNotification();
-    }
-  }
+  private void playInternal(String streamingURL) { signal.play(streamingURL); }
     
   @ReactMethod public void stop() {
     signal.stop();
   }
     
-  @ReactMethod public void pause() {
-    // Not implemented on aac
-    this.stop();
-  }
+  @ReactMethod public void pause() { this.stop(); }
     
-  @ReactMethod public void resume() {
-    // Not implemented on aac
-    signal.resume();
-  }
-    
-  @ReactMethod public void destroyNotification() {
-    signal.exitNotification();
-  }
-    
+  @ReactMethod public void resume() { signal.resume(); }
+
   @ReactMethod public void seekToTime(int seconds) {
     signal.seekTo(seconds * 1000);
   }

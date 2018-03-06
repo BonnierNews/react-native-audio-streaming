@@ -68,7 +68,7 @@ RCT_EXPORT_MODULE()
 
 #pragma mark - Pubic API
 
-RCT_EXPORT_METHOD(play:(NSString *) streamUrl options:(NSDictionary *)options)
+RCT_EXPORT_METHOD(play:(NSString *) streamUrl)
 {
    if (!self.audioPlayer) {
       return;

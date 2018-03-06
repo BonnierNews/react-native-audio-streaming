@@ -25,6 +25,11 @@ public class EventsReceiver extends BroadcastReceiver {
             params.putString("value", intent.getStringExtra("value"));
         }
 
+        if (intent.getAction().equals(Mode.STREAMING)) {
+            params.putDouble("duration", intent.getDoubleExtra("duration", 0.0));
+            params.putDouble("progress", intent.getDoubleExtra("progress", 0.0));
+        }
+
         this.module.sendEvent(this.module.getReactApplicationContextModule(), "AudioBridgeEvent", params);
     }
 }

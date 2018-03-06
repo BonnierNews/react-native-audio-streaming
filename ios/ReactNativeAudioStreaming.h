@@ -12,7 +12,7 @@
 @property (nonatomic, readwrite) NSString *lastUrlString;
 @property (nonatomic, retain) NSString *currentSong;
 
-- (void)play:(NSString *) streamUrl options:(NSDictionary *)options;
+- (void)play:(NSString *) streamUrl;
 - (void)pause;
 
 @end

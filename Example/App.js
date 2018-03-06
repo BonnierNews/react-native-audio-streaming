@@ -13,7 +13,7 @@ import {
   FlatList,
   NativeEventEmitter,
   TouchableOpacity,
-  Button
+  Button,
 } from 'react-native'
 
 import { ReactNativeAudioStreaming } from 'react-native-audio-streaming'
@@ -45,16 +45,29 @@ const data = [
   }
 ]
 
-type Props = {};
-export default class App extends Component<Props> {
+export default class App extends Component {
+  state = {
+    progress: 0.0,
+    duration: 0.0
+  }
+
   componentDidMount () {
-    reactNativeAudioStreamingEmitter.addListener(
+    this.subscription = reactNativeAudioStreamingEmitter.addListener(
       'AudioBridgeEvent',
-      event => console.log(event)
+      event => {
+        console.log('AudioBridgeEvent', event)
+        if (event.status === 'STREAMING') {
+          this.setState({
+            progress: event.progress,
+            duration: event.duration
+          })
+        }
+      }
     )
   }
 
   componentWillUnmount() {
+    this.subscription.remove()
     this.onStop()
   }
 
@@ -65,7 +78,7 @@ export default class App extends Component<Props> {
     />
   )
 
-  onPlayStream = (url) => ReactNativeAudioStreaming.play(url, {})
+  onPlayStream = (url) => ReactNativeAudioStreaming.play(url)
 
   onPause = () => ReactNativeAudioStreaming.pause()
 
@@ -83,6 +96,8 @@ export default class App extends Component<Props> {
           renderItem={this.renderItem}
         />
         <View style={styles.player}>
+          <Text>Progress: {this.state.progress}</Text>
+          <Text>Duration: {this.state.duration}</Text>
           <Button
             onPress={this.onResume}
             title="Resume"

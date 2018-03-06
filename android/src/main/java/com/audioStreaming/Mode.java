@@ -18,4 +18,5 @@ public class Mode {
     public static String ALBUM_UPDATED = "ALBUM_UPDATED";
     public static String DESTROYED = "DESTROYED";
     public static String IDLE = "IDLE";
+    public static String STREAMING = "STREAMING";
 }
